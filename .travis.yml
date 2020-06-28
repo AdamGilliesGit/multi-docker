@@ -1,24 +1,37 @@
-language: generic 
+language: generic
 sudo: required
 
 services:
-    - docker
+  - docker
 
 before_install:
-    - docker build -t adamgillies/react-test -f ./client/Dockerfile.dev ./client
+  - docker build -t adamgillies/react-test -f ./client/Dockerfile.dev ./client
 
 script:
-    - docker run -e CI=true adamgillies/react-test npm test
+  - docker run -e CI=true adamgillies/react-test npm test
 
 after_success:
-    - docker build -t adamgillies/multi-client ./client
-    - docker build -t adamgillies/multi-nginx ./nginx
-    - docker build -t adamgillies/multi-server ./server
-    - docker build -t adamgillies/multi-worker ./worker
-    #Log into the docker CLI
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
-    # Take images and push them to docker hub
-    - docker push adamgillies/multi-client
-    - docker push adamgillies/multi-nginx
-    - docker push adamgillies/multi-server
-    - docker push adamgillies/multi-worker
+  - docker build -t adamgillies/multi-client ./client
+  - docker build -t adamgillies/multi-nginx ./nginx
+  - docker build -t adamgillies/multi-server ./server
+  - docker build -t adamgillies/multi-worker ./worker
+  #Log into the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take images and push them to docker hub
+  - docker push adamgillies/multi-client
+  - docker push adamgillies/multi-nginx
+  - docker push adamgillies/multi-server
+  - docker push adamgillies/multi-worker
+
+deploy:
+  edge: true
+  provider: elasticbeanstalk
+  region: us-east-2
+  app: multi-docker2
+  env: MultiDocker2-env
+  bucket_name: elasticbeanstalk-us-east-2-902459589582
+  bucket_path: docker-multi
+  on:
+    branch: master
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key: $AWS_SECRET_KEY
